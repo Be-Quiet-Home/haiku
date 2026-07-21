@@ -58,7 +58,7 @@ PackageInfo::operator==(const PackageInfo& other) const
 		&& fLocalizedText == other.fLocalizedText
 		&& fClassificationInfo == other.fClassificationInfo
 		&& fScreenshotInfo == other.fScreenshotInfo
-		&& fUserRatingInfo == fUserRatingInfo;
+		&& fUserRatingInfo == other.fUserRatingInfo;
 }
 
 
@@ -109,7 +109,7 @@ PackageInfo::ChangeMask(const PackageInfo& other) const
 {
 	uint32 result = 0;
 
-	if (fLocalizedText != fLocalizedText)
+	if (fLocalizedText != other.fLocalizedText)
 		result |= PKG_CHANGED_LOCALIZED_TEXT;
 	if (fScreenshotInfo != other.fScreenshotInfo)
 		result |= PKG_CHANGED_SCREENSHOTS;
