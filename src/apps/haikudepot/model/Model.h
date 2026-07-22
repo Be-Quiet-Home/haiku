@@ -118,6 +118,9 @@ public:
 								Packages() const;
 			const std::vector<PackageInfoRef>
 								FilteredPackages() const;
+			const std::vector<PackageInfoRef>
+								FilteredPackages(
+									const PackageFilterSpecificationRef& specification) const;
 			void				AddPackage(const PackageInfoRef& package);
 			void				AddPackageWithChange(const PackageInfoRef& package,
 									uint32 changeMask);
@@ -174,6 +177,9 @@ public:
 
 
 private:
+			const std::vector<PackageInfoRef>
+								_FilteredPackages(const PackageFilterRef& filter) const;
+
 			uint32				_ChangeDiff(const PackageInfoRef& package);
 
 			void				_AddRatingStability(

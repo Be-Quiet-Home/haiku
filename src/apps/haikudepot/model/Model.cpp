@@ -361,12 +361,28 @@ const std::vector<PackageInfoRef>
 Model::FilteredPackages() const
 {
 	BAutolock locker(&fLock);
+	return _FilteredPackages(fFilter);
+}
+
+
+const std::vector<PackageInfoRef>
+Model::FilteredPackages(const PackageFilterSpecificationRef& specification) const
+{
+	PackageFilterRef filter = PackageFilterFactory::CreateFilter(specification);
+	BAutolock locker(&fLock);
+	return _FilteredPackages(filter);
+}
+
+
+const std::vector<PackageInfoRef>
+Model::_FilteredPackages(const PackageFilterRef& filter) const
+{
 	std::map<BString, PackageInfoRef>::const_iterator it;
 	std::vector<PackageInfoRef> result;
 
 	for (it = fPackages.begin(); it != fPackages.end(); it++) {
 		PackageInfoRef package = it->second;
-		if (fFilter->AcceptsPackage(package))
+		if (filter->AcceptsPackage(package))
 			result.push_back(package);
 	}
 
