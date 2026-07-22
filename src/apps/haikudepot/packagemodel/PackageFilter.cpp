@@ -400,6 +400,11 @@ PackageFilterFactory::CreateFilter(const PackageFilterSpecificationRef specifica
 	if (!specification->Category().IsEmpty())
 		andFilter->AddFilter(CreateCategoryFilter(specification->Category()));
 
+	if (specification->MinimumVersionTimestamp() != 0) {
+		andFilter->AddFilter(
+			CreateMinimumVersionTimestampFilter(specification->MinimumVersionTimestamp()));
+	}
+
 	if (specification->ShowOnlyDesktopPackages())
 		andFilter->AddFilter(CreateDesktopFilter());
 

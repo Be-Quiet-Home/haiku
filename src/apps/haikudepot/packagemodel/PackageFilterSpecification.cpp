@@ -12,6 +12,7 @@ PackageFilterSpecification::PackageFilterSpecification()
 	fSearchTerms(""),
 	fDepotName(""),
 	fCategory(""),
+	fMinimumVersionTimestamp(0),
 	fShowOnlyDesktopPackages(false),
 	fShowOnlyNativeDesktopPackages(false),
 	fShowAvailablePackages(true),
@@ -32,6 +33,7 @@ PackageFilterSpecification::operator==(const PackageFilterSpecification& other) 
 {
 	return fSearchTerms == other.SearchTerms() && fDepotName == other.DepotName()
 		&& fCategory == other.Category()
+		&& fMinimumVersionTimestamp == other.MinimumVersionTimestamp()
 		&& fShowOnlyDesktopPackages == other.ShowOnlyDesktopPackages()
 		&& fShowOnlyNativeDesktopPackages == other.ShowOnlyNativeDesktopPackages()
 		&& fShowAvailablePackages == other.ShowAvailablePackages()
@@ -66,6 +68,13 @@ BString
 PackageFilterSpecification::Category() const
 {
 	return fCategory;
+}
+
+
+uint64
+PackageFilterSpecification::MinimumVersionTimestamp() const
+{
+	return fMinimumVersionTimestamp;
 }
 
 
@@ -133,6 +142,13 @@ PackageFilterSpecification::SetCategory(BString value)
 
 
 void
+PackageFilterSpecification::SetMinimumVersionTimestamp(uint64 value)
+{
+	fMinimumVersionTimestamp = value;
+}
+
+
+void
 PackageFilterSpecification::SetShowOnlyDesktopPackages(bool value)
 {
 	fShowOnlyDesktopPackages = value;
@@ -182,6 +198,7 @@ PackageFilterSpecificationBuilder::PackageFilterSpecificationBuilder()
 	fSearchTerms(""),
 	fDepotName(""),
 	fCategory(""),
+	fMinimumVersionTimestamp(0),
 	fShowOnlyDesktopPackages(false),
 	fShowOnlyNativeDesktopPackages(false),
 	fShowAvailablePackages(true),
@@ -199,6 +216,7 @@ PackageFilterSpecificationBuilder::PackageFilterSpecificationBuilder(
 	fSearchTerms(""),
 	fDepotName(""),
 	fCategory(""),
+	fMinimumVersionTimestamp(0),
 	fShowOnlyDesktopPackages(false),
 	fShowOnlyNativeDesktopPackages(false),
 	fShowAvailablePackages(true),
@@ -230,6 +248,7 @@ PackageFilterSpecificationBuilder::_Init(const PackageFilterSpecification* value
 	fSearchTerms = value->SearchTerms();
 	fDepotName = value->DepotName();
 	fCategory = value->Category();
+	fMinimumVersionTimestamp = value->MinimumVersionTimestamp();
 	fShowOnlyDesktopPackages = value->ShowOnlyDesktopPackages();
 	fShowOnlyNativeDesktopPackages = value->ShowOnlyNativeDesktopPackages();
 	fShowAvailablePackages = value->ShowAvailablePackages();
@@ -249,6 +268,7 @@ PackageFilterSpecificationBuilder::BuildRef()
 	info->SetSearchTerms(fSearchTerms);
 	info->SetDepotName(fDepotName);
 	info->SetCategory(fCategory);
+	info->SetMinimumVersionTimestamp(fMinimumVersionTimestamp);
 	info->SetShowOnlyDesktopPackages(fShowOnlyDesktopPackages);
 	info->SetShowOnlyNativeDesktopPackages(fShowOnlyNativeDesktopPackages);
 	info->SetShowAvailablePackages(fShowAvailablePackages);
@@ -287,6 +307,17 @@ PackageFilterSpecificationBuilder::WithCategory(BString value)
 	if (!fSource.IsSet() || fSource->Category() != value) {
 		_InitFromSource();
 		fCategory = value;
+	}
+	return *this;
+}
+
+
+PackageFilterSpecificationBuilder
+PackageFilterSpecificationBuilder::WithMinimumVersionTimestamp(uint64 value)
+{
+	if (!fSource.IsSet() || fSource->MinimumVersionTimestamp() != value) {
+		_InitFromSource();
+		fMinimumVersionTimestamp = value;
 	}
 	return *this;
 }

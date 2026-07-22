@@ -8,6 +8,7 @@
 
 #include <Referenceable.h>
 #include <String.h>
+#include <SupportDefs.h>
 
 
 /*!	Instances of this class should not be created directly; instead use the
@@ -27,6 +28,7 @@ public:
 			BString				SearchTerms() const;
 			BString				DepotName() const;
 			BString				Category() const;
+			uint64				MinimumVersionTimestamp() const;
 			bool				ShowOnlyDesktopPackages() const;
 			bool				ShowOnlyNativeDesktopPackages() const;
 			bool				ShowAvailablePackages() const;
@@ -38,6 +40,7 @@ private:
 			void				SetSearchTerms(BString value);
 			void				SetDepotName(BString value);
 			void				SetCategory(BString value);
+			void				SetMinimumVersionTimestamp(uint64 value);
 			void				SetShowOnlyDesktopPackages(bool value);
 			void				SetShowOnlyNativeDesktopPackages(bool value);
 			void				SetShowAvailablePackages(bool value);
@@ -49,6 +52,7 @@ private:
 			BString				fSearchTerms;
 			BString				fDepotName;
 			BString				fCategory;
+			uint64				fMinimumVersionTimestamp;
 			bool				fShowOnlyDesktopPackages;
 			bool				fShowOnlyNativeDesktopPackages;
 			bool				fShowAvailablePackages;
@@ -79,6 +83,8 @@ public:
 			PackageFilterSpecificationBuilder
 								WithCategory(BString value);
 			PackageFilterSpecificationBuilder
+								WithMinimumVersionTimestamp(uint64 value);
+			PackageFilterSpecificationBuilder
 								WithShowOnlyDesktopPackages(bool value);
 			PackageFilterSpecificationBuilder
 								WithShowOnlyNativeDesktopPackages(bool value);
@@ -101,6 +107,7 @@ private:
 			BString				fSearchTerms;
 			BString				fDepotName;
 			BString				fCategory;
+			uint64				fMinimumVersionTimestamp;
 			bool				fShowOnlyDesktopPackages;
 			bool				fShowOnlyNativeDesktopPackages;
 			bool				fShowAvailablePackages;
