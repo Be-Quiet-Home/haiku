@@ -201,6 +201,31 @@ public:
 };
 
 
+class MinimumVersionTimestampFilter : public PackageFilter {
+public:
+	MinimumVersionTimestampFilter(uint64 minimumTimestamp)
+		:
+		fMinimumTimestamp(minimumTimestamp)
+	{
+	}
+
+	virtual bool AcceptsPackage(const PackageInfoRef& package) const
+	{
+		PackageVersionRef version = PackageUtils::Version(package);
+
+		if (!version.IsSet())
+			return false;
+
+		uint64 createTimestamp = version->CreateTimestamp();
+
+		return createTimestamp != 0 && createTimestamp >= fMinimumTimestamp;
+	}
+
+private:
+	uint64	fMinimumTimestamp;
+};
+
+
 class SearchTermsFilter : public PackageFilter {
 public:
 	SearchTermsFilter(const BString& searchTerms)
@@ -341,6 +366,13 @@ PackageFilterFactory::CreateSourceFilter()
 PackageFilterFactory::CreateDevelopmentFilter()
 {
 	return PackageFilterRef(new DevelopmentFilter(), true);
+}
+
+
+/*static*/ PackageFilterRef
+PackageFilterFactory::CreateMinimumVersionTimestampFilter(uint64 minimumTimestamp)
+{
+	return PackageFilterRef(new MinimumVersionTimestampFilter(minimumTimestamp), true);
 }
 
 
