@@ -31,7 +31,8 @@ class BPath;
 
 typedef enum package_list_view_mode {
 	PROMINENT,
-	ALL
+	ALL,
+	RECENT
 } package_list_view_mode;
 
 

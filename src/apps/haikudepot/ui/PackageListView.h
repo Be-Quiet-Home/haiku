@@ -22,7 +22,13 @@ class WorkStatusView;
 
 class PackageListView : public BColumnListView {
 public:
-								PackageListView(Model* model);
+	enum SortKey {
+		SORT_NAME,
+		SORT_VERSION_DATE
+	};
+
+								PackageListView(Model* model,
+									SortKey sortKey = SORT_NAME);
 	virtual						~PackageListView();
 
 	virtual void				AttachedToWindow();
@@ -62,6 +68,7 @@ private:
 			RowByNameTable*		fRowByNameTable;
 
 			WorkStatusView*		fWorkStatusView;
+			SortKey				fSortKey;
 
 			bool				fIgnoreSelectionChanged;
 };

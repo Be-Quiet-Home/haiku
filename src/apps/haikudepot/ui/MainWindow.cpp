@@ -28,6 +28,7 @@
 #include <MenuItem.h>
 #include <MessageRunner.h>
 #include <Messenger.h>
+#include <OS.h>
 #include <Roster.h>
 #include <Screen.h>
 #include <StopWatch.h>
@@ -111,15 +112,45 @@ static const char* const kKeyColumnSettings = "column settings";
 #define KEY_ERROR_STATUS				"errorStatus"
 
 const bigtime_t kIncrementViewCounterDelayMicros = 3 * 1000 * 1000;
+static const uint64 kRecentPackageWindowMillis
+	= 14ULL * 24ULL * 60ULL * 60ULL * 1000ULL;
 
 #define TAB_PROMINENT_PACKAGES	0
 #define TAB_ALL_PACKAGES		1
+#define TAB_RECENT_PACKAGES		2
 
 using namespace BPackageKit;
 using namespace BPackageKit::BManager::BPrivate;
 
 
 typedef std::map<BString, PackageInfoRef> PackageInfoMap;
+
+
+static uint64
+minimum_recent_version_timestamp()
+{
+	const bigtime_t nowMicros = real_time_clock_usecs();
+
+	if (nowMicros <= 0) {
+		HDERROR("unable to derive recent package timestamp from wall clock");
+		return UINT64_MAX;
+	}
+
+	const uint64 nowMillis = static_cast<uint64>(nowMicros / 1000);
+	if (nowMillis <= kRecentPackageWindowMillis)
+		return 1;
+
+	return nowMillis - kRecentPackageWindowMillis;
+}
+
+
+static PackageFilterSpecificationRef
+recent_package_filter_specification(const Model& model)
+{
+	return PackageFilterSpecificationBuilder(model.FilterSpecification())
+		.WithMinimumVersionTimestamp(minimum_recent_version_timestamp())
+		.BuildRef();
+}
 
 
 struct RefreshWorkerParameters {
@@ -257,17 +288,24 @@ MainWindow::MainWindow(const BMessage& settings)
 	fFilterView = new FilterView();
 	fFeaturedPackagesView = new FeaturedPackagesView(fModel);
 	fPackageListView = new PackageListView(&fModel);
+	fRecentPackagesView
+		= new PackageListView(&fModel, PackageListView::SORT_VERSION_DATE);
 	fPackageInfoView = new PackageInfoView(&fModel);
 
 	fSplitView = new BSplitView(B_VERTICAL, 5.0f);
 
 	fWorkStatusView = new WorkStatusView("work status");
 	fPackageListView->AttachWorkStatusView(fWorkStatusView);
+	fRecentPackagesView->AttachWorkStatusView(fWorkStatusView);
 
 	fListTabs
 		= new TabView(BMessenger(this), BMessage(MSG_PACKAGE_LIST_MODE_TAB_CHANGED), "list tabs");
 	fListTabs->AddTab(fFeaturedPackagesView);
 	fListTabs->AddTab(fPackageListView);
+
+	BTab* recentPackagesTab = new BTab();
+	recentPackagesTab->SetLabel(B_TRANSLATE("Recently updated"));
+	fListTabs->AddTab(fRecentPackagesView, recentPackagesTab);
 
 	BLayoutBuilder::Group<>(this, B_VERTICAL, 0.0f)
 		.AddGroup(B_HORIZONTAL, 0.0f)
@@ -322,6 +360,7 @@ MainWindow::MainWindow(const BMessage& settings, const PackageInfoRef package)
 		B_NORMAL_WINDOW_FEEL, B_ASYNCHRONOUS_CONTROLS | B_AUTO_UPDATE_SIZE_LIMITS),
 	fFeaturedPackagesView(NULL),
 	fPackageListView(NULL),
+	fRecentPackagesView(NULL),
 	fWorkStatusView(NULL),
 	fScreenshotWindow(NULL),
 	fShuttingDownWindow(NULL),
@@ -778,9 +817,17 @@ MainWindow::MessageReceived(BMessage* message)
 static const char*
 main_window_package_list_view_mode_str(package_list_view_mode mode)
 {
-	if (mode == PROMINENT)
-		return "PROMINENT";
-	return "ALL";
+	switch (mode) {
+		case PROMINENT:
+			return "PROMINENT";
+		case ALL:
+			return "ALL";
+		case RECENT:
+			return "RECENT";
+		default:
+			HDFATAL("unknown package list view mode");
+			return "ALL";
+	}
 }
 
 
@@ -789,6 +836,8 @@ main_window_str_to_package_list_view_mode(const BString& str)
 {
 	if (str == "PROMINENT")
 		return PROMINENT;
+	if (str == "RECENT")
+		return RECENT;
 	return ALL;
 }
 
@@ -916,44 +965,57 @@ MainWindow::_HandlePackagesChanged(const BMessage* message)
 
 	if (!fSinglePackageMode) {
 		uint32 watchedChanges = PKG_CHANGED_LOCAL_INFO | PKG_CHANGED_CLASSIFICATION;
+		uint32 recentWatchedChanges = watchedChanges | PKG_CHANGED_CORE_INFO;
 		PackageFilterRef filter = fModel.Filter();
+		PackageFilterRef recentFilter = PackageFilterFactory::CreateFilter(
+			recent_package_filter_specification(fModel));
 
 		std::vector<PackageInfoRef> addedPackages;
 		std::vector<PackageInfoRef> removedPackages;
 		std::vector<PackageInfoRef> addedFeaturedPackages;
 		std::vector<PackageInfoRef> removedFeaturedPackages;
+		std::vector<PackageInfoRef> addedRecentPackages;
+		std::vector<PackageInfoRef> removedRecentPackages;
 
 		std::vector<PackageInfoChangeEvent>::const_iterator it;
 
 		for (it = packageInfoEvents.begin(); it != packageInfoEvents.end(); it++) {
 			const PackageInfoChangeEvent packageInfoEvent = *it;
+			const PackageInfoRef package = packageInfoEvent.Package();
+
+			if (!package.IsSet()) {
+				HDFATAL("package change event for missing package");
+					// should have checked earlier so this is an illegal state
+				continue;
+			}
 
 			if (packageInfoEvent.Changes() & watchedChanges) {
-				const PackageInfoRef package = packageInfoEvent.Package();
+				const bool isProminent = PackageUtils::IsProminent(package);
 
-				if (package.IsSet()) {
-					const bool isProminent = PackageUtils::IsProminent(package);
+				if (filter->AcceptsPackage(package)) {
+					addedPackages.push_back(package);
 
-					if (filter->AcceptsPackage(package)) {
-						addedPackages.push_back(package);
-
-						if (isProminent)
-							addedFeaturedPackages.push_back(package);
-					} else {
-						removedPackages.push_back(package);
-
-						if (isProminent)
-							removedFeaturedPackages.push_back(package);
-					}
+					if (isProminent)
+						addedFeaturedPackages.push_back(package);
 				} else {
-					HDFATAL("package change event for missing package");
-						// should have checked earlier so this is an illegal state
+					removedPackages.push_back(package);
+
+					if (isProminent)
+						removedFeaturedPackages.push_back(package);
 				}
+			}
+
+			if (packageInfoEvent.Changes() & recentWatchedChanges) {
+				if (recentFilter->AcceptsPackage(package))
+					addedRecentPackages.push_back(package);
+				else
+					removedRecentPackages.push_back(package);
 			}
 		}
 
 		fPackageListView->AddRemovePackages(addedPackages, removedPackages);
 		fFeaturedPackagesView->AddRemovePackages(addedFeaturedPackages, removedFeaturedPackages);
+		fRecentPackagesView->AddRemovePackages(addedRecentPackages, removedRecentPackages);
 	}
 
 	// Now relay the changes to the other UI elements. This seems a bit strange
@@ -964,6 +1026,7 @@ MainWindow::_HandlePackagesChanged(const BMessage* message)
 	if (!fSinglePackageMode) {
 		fFeaturedPackagesView->HandlePackagesChanged(packageInfoEvents);
 		fPackageListView->HandlePackagesChanged(packageInfoEvents);
+		fRecentPackagesView->HandlePackagesChanged(packageInfoEvents);
 	}
 
 	fPackageInfoView->HandlePackagesChanged(packageInfoEvents);
@@ -1231,6 +1294,9 @@ MainWindow::_AdoptModelControls()
 		case ALL:
 			fListTabs->Select(TAB_ALL_PACKAGES);
 			break;
+		case RECENT:
+			fListTabs->Select(TAB_RECENT_PACKAGES);
+			break;
 		default:
 			HDFATAL("attempt to select unknown tab");
 			break;
@@ -1260,9 +1326,10 @@ MainWindow::_IsPackageListView(BView* view)
 	if (view == NULL)
 		return false;
 
-	BView* packageListViews[2] = {fFeaturedPackagesView, fPackageListView};
+	BView* packageListViews[3]
+		= {fFeaturedPackagesView, fPackageListView, fRecentPackagesView};
 
-	for (int i = 0; i < 2; i++) {
+	for (int i = 0; i < 3; i++) {
 		BView* v = view;
 
 		while (v != NULL) {
@@ -1289,6 +1356,7 @@ MainWindow::_AdoptModel()
 	// Create a new list which only contains the featured packages.
 
 	const std::vector<PackageInfoRef> packages = _CreateSnapshotOfFilteredPackages();
+	const std::vector<PackageInfoRef> recentPackages = _CreateSnapshotOfRecentPackages();
 	std::vector<PackageInfoRef> featuredPackages;
 	std::vector<PackageInfoRef>::const_iterator it;
 
@@ -1303,6 +1371,7 @@ MainWindow::_AdoptModel()
 
 	fPackageListView->RetainPackages(packages);
 	fFeaturedPackagesView->RetainPackages(featuredPackages);
+	fRecentPackagesView->RetainPackages(recentPackages);
 
 	_AdoptModelControls();
 
@@ -1399,6 +1468,8 @@ MainWindow::_AdoptPackage(const PackageInfoRef& package)
 			fFeaturedPackagesView->SelectPackage(package);
 		if (fPackageListView != NULL)
 			fPackageListView->SelectPackage(package);
+		if (fRecentPackagesView != NULL)
+			fRecentPackagesView->SelectPackage(package);
 	}
 }
 
@@ -1418,6 +1489,8 @@ MainWindow::_StartBulkLoad(bool force)
 			fFeaturedPackagesView->Clear();
 		if (fPackageListView != NULL)
 			fPackageListView->Clear();
+		if (fRecentPackagesView != NULL)
+			fRecentPackagesView->Clear();
 	}
 
 	fPackageInfoView->Clear();
@@ -2022,6 +2095,10 @@ MainWindow::_HandleChangePackageListViewMode()
 		case TAB_ALL_PACKAGES:
 			fModel.SetPackageListViewMode(ALL);
 			break;
+		case TAB_RECENT_PACKAGES:
+			fRecentPackagesView->RetainPackages(_CreateSnapshotOfRecentPackages());
+			fModel.SetPackageListViewMode(RECENT);
+			break;
 		default:
 			HDFATAL("unknown package list tab");
 			break;
@@ -2036,6 +2113,13 @@ const std::vector<PackageInfoRef>
 MainWindow::_CreateSnapshotOfFilteredPackages()
 {
 	return fModel.FilteredPackages();
+}
+
+
+const std::vector<PackageInfoRef>
+MainWindow::_CreateSnapshotOfRecentPackages()
+{
+	return fModel.FilteredPackages(recent_package_filter_specification(fModel));
 }
 
 
@@ -2057,6 +2141,7 @@ MainWindow::_HandleIconsChanged()
 	if (!fSinglePackageMode) {
 		fFeaturedPackagesView->HandleIconsChanged();
 		fPackageListView->HandleIconsChanged();
+		fRecentPackagesView->HandleIconsChanged();
 	}
 
 	fPackageInfoView->HandleIconsChanged();

@@ -1073,12 +1073,13 @@ struct PackageListView::RowByNameHashDefinition {
 // #pragma mark - PackageListView
 
 
-PackageListView::PackageListView(Model* model)
+PackageListView::PackageListView(Model* model, SortKey sortKey)
 	:
 	BColumnListView(B_TRANSLATE("All packages"), 0, B_FANCY_BORDER, true),
 	fModel(model),
 	fRowByNameTable(new RowByNameTable()),
 	fWorkStatusView(NULL),
+	fSortKey(sortKey),
 	fIgnoreSelectionChanged(false)
 {
 	float scale = be_plain_font->Size() / 12.f;
@@ -1146,8 +1147,12 @@ PackageListView::AllAttached()
 {
 	BColumnListView::AllAttached();
 
+	int32 sortColumn = kTitleColumn;
+	if (fSortKey == SORT_VERSION_DATE)
+		sortColumn = kVersionCreateTimestampColumn;
+
 	SetSortingEnabled(true);
-	SetSortColumn(ColumnAt(0), false, true);
+	SetSortColumn(ColumnAt(sortColumn), false, true);
 }
 
 

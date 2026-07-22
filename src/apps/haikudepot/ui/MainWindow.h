@@ -79,6 +79,8 @@ private:
 
 			const std::vector<PackageInfoRef>
 								_CreateSnapshotOfFilteredPackages();
+			const std::vector<PackageInfoRef>
+								_CreateSnapshotOfRecentPackages();
 			std::vector<DepotInfoRef>
 								_CreateSnapshotOfDepots();
 
@@ -176,6 +178,7 @@ private:
 			TabView*			fListTabs;
 			FeaturedPackagesView* fFeaturedPackagesView;
 			PackageListView*	fPackageListView;
+			PackageListView*	fRecentPackagesView;
 			PackageInfoView*	fPackageInfoView;
 			BSplitView*			fSplitView;
 			WorkStatusView*		fWorkStatusView;
