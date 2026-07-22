@@ -374,6 +374,10 @@ PackageFilterFactory::CreateFilter(const PackageFilterSpecificationRef specifica
 	if (specification->ShowOnlyNativeDesktopPackages())
 		andFilter->AddFilter(CreateNativeDesktopFilter());
 
+	if (!specification->ShowAvailablePackages()) {
+		andFilter->AddFilter(PackageFilterRef(new NotFilter(CreateStateFilter(NONE)), true));
+	}
+
 	if (!specification->ShowInstalledPackages())
 		andFilter->AddFilter(PackageFilterRef(new NotFilter(CreateStateFilter(ACTIVATED)), true));
 
