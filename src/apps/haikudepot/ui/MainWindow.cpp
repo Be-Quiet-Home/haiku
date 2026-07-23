@@ -304,8 +304,8 @@ MainWindow::MainWindow(const BMessage& settings)
 	fListTabs->AddTab(fPackageListView);
 
 	BTab* recentPackagesTab = new BTab();
-	recentPackagesTab->SetLabel(B_TRANSLATE("Recently updated"));
 	fListTabs->AddTab(fRecentPackagesView, recentPackagesTab);
+	recentPackagesTab->SetLabel(B_TRANSLATE("Recently added"));
 
 	BLayoutBuilder::Group<>(this, B_VERTICAL, 0.0f)
 		.AddGroup(B_HORIZONTAL, 0.0f)

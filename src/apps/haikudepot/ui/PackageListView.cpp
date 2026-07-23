@@ -1088,9 +1088,9 @@ PackageListView::PackageListView(Model* model, SortKey sortKey)
 	AddColumn(new PackageColumn(fModel, B_TRANSLATE("Name"), 150 * scale, 50 * scale, 300 * scale,
 				  B_TRUNCATE_MIDDLE),
 		kTitleColumn);
-	AddColumn(new PackageColumn(fModel, B_TRANSLATE("Rating"), 80 * scale, 50 * scale, 100 * scale,
-				  B_TRUNCATE_MIDDLE),
-		kRatingColumn);
+	PackageColumn* ratingColumn = new PackageColumn(fModel, B_TRANSLATE("Rating"),
+		80 * scale, 50 * scale, 100 * scale, B_TRUNCATE_MIDDLE);
+	AddColumn(ratingColumn, kRatingColumn);
 	AddColumn(new PackageColumn(fModel, B_TRANSLATE("Description"), 300 * scale, 80 * scale,
 				  1000 * scale, B_TRUNCATE_MIDDLE),
 		kDescriptionColumn);
@@ -1111,15 +1111,23 @@ PackageListView::PackageListView(Model* model, SortKey sortKey)
 
 	float widthWithPlacboVersion = spacing + StringWidth("8.2.3176-2");
 		// average sort of version length as model
-	AddColumn(new PackageColumn(fModel, B_TRANSLATE("Version"), widthWithPlacboVersion,
-				  widthWithPlacboVersion, widthWithPlacboVersion + (50 * scale), B_TRUNCATE_MIDDLE),
-		kVersionColumn);
+	PackageColumn* versionColumn = new PackageColumn(fModel, B_TRANSLATE("Version"),
+		widthWithPlacboVersion, widthWithPlacboVersion,
+		widthWithPlacboVersion + (50 * scale), B_TRUNCATE_MIDDLE);
+	AddColumn(versionColumn, kVersionColumn);
 
 	float widthWithPlaceboDate
 		= spacing + StringWidth(LocaleUtils::TimestampToDateString(static_cast<uint64>(1000)));
-	AddColumn(new PackageColumn(fModel, B_TRANSLATE("Date"), widthWithPlaceboDate,
-				  widthWithPlaceboDate, widthWithPlaceboDate + (50 * scale), B_TRUNCATE_END),
-		kVersionCreateTimestampColumn);
+	PackageColumn* dateColumn = new PackageColumn(fModel, B_TRANSLATE("Date"),
+		widthWithPlaceboDate, widthWithPlaceboDate,
+		widthWithPlaceboDate + (50 * scale), B_TRUNCATE_END);
+	AddColumn(dateColumn, kVersionCreateTimestampColumn);
+
+	if (fSortKey == SORT_VERSION_DATE) {
+		MoveColumn(versionColumn, 1);
+		MoveColumn(dateColumn, 5);
+		SetColumnVisible(ratingColumn, false);
+	}
 
 	fItemCountView = new ItemCountView();
 	AddStatusView(fItemCountView);
@@ -1147,12 +1155,23 @@ PackageListView::AllAttached()
 {
 	BColumnListView::AllAttached();
 
-	int32 sortColumn = kTitleColumn;
+	int32 sortField = kTitleColumn;
 	if (fSortKey == SORT_VERSION_DATE)
-		sortColumn = kVersionCreateTimestampColumn;
+		sortField = kVersionCreateTimestampColumn;
 
-	SetSortingEnabled(true);
-	SetSortColumn(ColumnAt(sortColumn), false, true);
+	BColumn* sortColumn = NULL;
+	for (int32 i = 0; i < CountColumns(); i++) {
+		BColumn* column = ColumnAt(i);
+		if (column != NULL && column->LogicalFieldNum() == sortField) {
+			sortColumn = column;
+			break;
+		}
+	}
+
+	if (sortColumn != NULL) {
+		SetSortingEnabled(true);
+		SetSortColumn(sortColumn, false, true);
+	}
 }
 
 
