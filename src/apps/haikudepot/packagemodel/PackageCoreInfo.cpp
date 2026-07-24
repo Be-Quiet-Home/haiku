@@ -12,6 +12,7 @@
 PackageCoreInfo::PackageCoreInfo()
 	:
 	fVersion(),
+	fCreateTimestamp(0),
 	fPublisher(),
 	fArchitecture(),
 	fDepotName()
@@ -22,6 +23,7 @@ PackageCoreInfo::PackageCoreInfo()
 PackageCoreInfo::PackageCoreInfo(const PackageCoreInfo& other)
 	:
 	fVersion(other.fVersion),
+	fCreateTimestamp(other.fCreateTimestamp),
 	fPublisher(other.fPublisher),
 	fArchitecture(other.fArchitecture),
 	fDepotName(other.fDepotName)
@@ -38,6 +40,7 @@ bool
 PackageCoreInfo::operator==(const PackageCoreInfo& other) const
 {
 	return fVersion == other.fVersion
+		&& fCreateTimestamp == other.fCreateTimestamp
 		&& fPublisher == other.fPublisher
 		&& fArchitecture == other.fArchitecture
 		&& fDepotName == other.fDepotName;
@@ -55,6 +58,13 @@ const PackageVersionRef&
 PackageCoreInfo::Version() const
 {
 	return fVersion;
+}
+
+
+uint64
+PackageCoreInfo::CreateTimestamp() const
+{
+	return fCreateTimestamp;
 }
 
 
@@ -87,6 +97,13 @@ PackageCoreInfo::SetVersion(PackageVersionRef value)
 
 
 void
+PackageCoreInfo::SetCreateTimestamp(uint64 value)
+{
+	fCreateTimestamp = value;
+}
+
+
+void
 PackageCoreInfo::SetPublisher(PackagePublisherInfoRef value)
 {
 	fPublisher = value;
@@ -113,6 +130,7 @@ PackageCoreInfo::SetDepotName(const BString& value)
 PackageCoreInfoBuilder::PackageCoreInfoBuilder()
 	:
 	fVersion(),
+	fCreateTimestamp(0),
 	fPublisher(),
 	fArchitecture(),
 	fDepotName()
@@ -123,6 +141,7 @@ PackageCoreInfoBuilder::PackageCoreInfoBuilder()
 PackageCoreInfoBuilder::PackageCoreInfoBuilder(const PackageCoreInfoRef& other)
 	:
 	fVersion(),
+	fCreateTimestamp(0),
 	fPublisher(),
 	fArchitecture(),
 	fDepotName()
@@ -150,6 +169,7 @@ void
 PackageCoreInfoBuilder::_Init(const PackageCoreInfo* other)
 {
 	fVersion = other->Version();
+	fCreateTimestamp = other->CreateTimestamp();
 	fPublisher = other->Publisher();
 	fArchitecture = other->Architecture();
 	fDepotName = other->DepotName();
@@ -164,6 +184,7 @@ PackageCoreInfoBuilder::BuildRef()
 
 	PackageCoreInfo* coreInfo = new PackageCoreInfo();
 	coreInfo->SetVersion(fVersion);
+	coreInfo->SetCreateTimestamp(fCreateTimestamp);
 	coreInfo->SetPublisher(fPublisher);
 	coreInfo->SetArchitecture(fArchitecture);
 	coreInfo->SetDepotName(fDepotName);
@@ -178,6 +199,17 @@ PackageCoreInfoBuilder::WithVersion(PackageVersionRef value)
 	if (!fSource.IsSet() || fSource->Version() != value) {
 		_InitFromSource();
 		fVersion = value;
+	}
+	return *this;
+}
+
+
+PackageCoreInfoBuilder&
+PackageCoreInfoBuilder::WithCreateTimestamp(uint64 value)
+{
+	if (!fSource.IsSet() || fSource->CreateTimestamp() != value) {
+		_InitFromSource();
+		fCreateTimestamp = value;
 	}
 	return *this;
 }

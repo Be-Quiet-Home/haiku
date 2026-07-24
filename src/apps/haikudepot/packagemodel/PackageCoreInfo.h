@@ -38,6 +38,7 @@ public:
 
 			const PackageVersionRef&
 								Version() const;
+			uint64				CreateTimestamp() const;
 			const PackagePublisherInfoRef&
 								Publisher() const;
 			const BString		Architecture() const;
@@ -45,6 +46,7 @@ public:
 
 private:
 			void				SetVersion(PackageVersionRef value);
+			void				SetCreateTimestamp(uint64 value);
 			void				SetPublisher(PackagePublisherInfoRef value);
 			void				SetArchitecture(const BString& value);
 			void				SetDepotName(const BString& value);
@@ -52,6 +54,8 @@ private:
 private:
 			PackageVersionRef
 								fVersion;
+			uint64				fCreateTimestamp;
+				// milliseconds since epoch
 			PackagePublisherInfoRef
 								fPublisher;
 			BString				fArchitecture;
@@ -76,6 +80,8 @@ public:
 			PackageCoreInfoBuilder&
 								WithVersion(PackageVersionRef value);
 			PackageCoreInfoBuilder&
+								WithCreateTimestamp(uint64 value);
+			PackageCoreInfoBuilder&
 								WithPublisher(PackagePublisherInfoRef value);
 			PackageCoreInfoBuilder&
 								WithArchitecture(const BString& value);
@@ -91,6 +97,8 @@ private:
 								fSource;
 			PackageVersionRef
 								fVersion;
+			uint64				fCreateTimestamp;
+				// milliseconds since epoch
 			PackagePublisherInfoRef
 								fPublisher;
 			BString				fArchitecture;

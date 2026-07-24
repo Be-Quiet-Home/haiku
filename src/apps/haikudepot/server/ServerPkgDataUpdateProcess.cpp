@@ -133,6 +133,11 @@ PackageFillingPkgListener::_CreateUpdatePackage(const PackageInfoRef& package,
 		// don't want to start with the existing data; just take what comes from the server.
 	PackageUserRatingInfoBuilder userRatingBuilder;
 
+	if (pkg->IsSetCreateTimestamp()) {
+		coreInfoBuilder.WithCreateTimestamp(
+			static_cast<uint64>(pkg->CreateTimestamp()));
+	}
+
 	localizedTextBuilder.WithHasChangelog(pkg->HasChangelog());
 
 	if (0 != pkg->CountPkgVersions()) {
