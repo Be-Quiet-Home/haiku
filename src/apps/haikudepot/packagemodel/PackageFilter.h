@@ -68,6 +68,9 @@ public:
 	static	PackageFilterRef	CreateNativeDesktopFilter();
 	static	PackageFilterRef	CreateSourceFilter();
 	static	PackageFilterRef	CreateDevelopmentFilter();
+	static	PackageFilterRef	CreatePackageTimestampRangeFilter(
+									uint64 minimumTimestamp,
+									uint64 maximumTimestampExclusive);
 	static	PackageFilterRef	CreateMinimumVersionTimestampFilter(
 									uint64 minimumTimestamp);
 	static	PackageFilterRef	CreateFalseFilter();

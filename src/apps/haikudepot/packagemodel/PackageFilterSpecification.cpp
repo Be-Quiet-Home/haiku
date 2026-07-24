@@ -12,6 +12,8 @@ PackageFilterSpecification::PackageFilterSpecification()
 	fSearchTerms(""),
 	fDepotName(""),
 	fCategory(""),
+	fMinimumPackageTimestamp(0),
+	fMaximumPackageTimestampExclusive(0),
 	fMinimumVersionTimestamp(0),
 	fShowOnlyDesktopPackages(false),
 	fShowOnlyNativeDesktopPackages(false),
@@ -33,6 +35,9 @@ PackageFilterSpecification::operator==(const PackageFilterSpecification& other) 
 {
 	return fSearchTerms == other.SearchTerms() && fDepotName == other.DepotName()
 		&& fCategory == other.Category()
+		&& fMinimumPackageTimestamp == other.MinimumPackageTimestamp()
+		&& fMaximumPackageTimestampExclusive
+			== other.MaximumPackageTimestampExclusive()
 		&& fMinimumVersionTimestamp == other.MinimumVersionTimestamp()
 		&& fShowOnlyDesktopPackages == other.ShowOnlyDesktopPackages()
 		&& fShowOnlyNativeDesktopPackages == other.ShowOnlyNativeDesktopPackages()
@@ -68,6 +73,20 @@ BString
 PackageFilterSpecification::Category() const
 {
 	return fCategory;
+}
+
+
+uint64
+PackageFilterSpecification::MinimumPackageTimestamp() const
+{
+	return fMinimumPackageTimestamp;
+}
+
+
+uint64
+PackageFilterSpecification::MaximumPackageTimestampExclusive() const
+{
+	return fMaximumPackageTimestampExclusive;
 }
 
 
@@ -142,6 +161,20 @@ PackageFilterSpecification::SetCategory(BString value)
 
 
 void
+PackageFilterSpecification::SetMinimumPackageTimestamp(uint64 value)
+{
+	fMinimumPackageTimestamp = value;
+}
+
+
+void
+PackageFilterSpecification::SetMaximumPackageTimestampExclusive(uint64 value)
+{
+	fMaximumPackageTimestampExclusive = value;
+}
+
+
+void
 PackageFilterSpecification::SetMinimumVersionTimestamp(uint64 value)
 {
 	fMinimumVersionTimestamp = value;
@@ -198,6 +231,8 @@ PackageFilterSpecificationBuilder::PackageFilterSpecificationBuilder()
 	fSearchTerms(""),
 	fDepotName(""),
 	fCategory(""),
+	fMinimumPackageTimestamp(0),
+	fMaximumPackageTimestampExclusive(0),
 	fMinimumVersionTimestamp(0),
 	fShowOnlyDesktopPackages(false),
 	fShowOnlyNativeDesktopPackages(false),
@@ -216,6 +251,8 @@ PackageFilterSpecificationBuilder::PackageFilterSpecificationBuilder(
 	fSearchTerms(""),
 	fDepotName(""),
 	fCategory(""),
+	fMinimumPackageTimestamp(0),
+	fMaximumPackageTimestampExclusive(0),
 	fMinimumVersionTimestamp(0),
 	fShowOnlyDesktopPackages(false),
 	fShowOnlyNativeDesktopPackages(false),
@@ -248,6 +285,8 @@ PackageFilterSpecificationBuilder::_Init(const PackageFilterSpecification* value
 	fSearchTerms = value->SearchTerms();
 	fDepotName = value->DepotName();
 	fCategory = value->Category();
+	fMinimumPackageTimestamp = value->MinimumPackageTimestamp();
+	fMaximumPackageTimestampExclusive = value->MaximumPackageTimestampExclusive();
 	fMinimumVersionTimestamp = value->MinimumVersionTimestamp();
 	fShowOnlyDesktopPackages = value->ShowOnlyDesktopPackages();
 	fShowOnlyNativeDesktopPackages = value->ShowOnlyNativeDesktopPackages();
@@ -268,6 +307,8 @@ PackageFilterSpecificationBuilder::BuildRef()
 	info->SetSearchTerms(fSearchTerms);
 	info->SetDepotName(fDepotName);
 	info->SetCategory(fCategory);
+	info->SetMinimumPackageTimestamp(fMinimumPackageTimestamp);
+	info->SetMaximumPackageTimestampExclusive(fMaximumPackageTimestampExclusive);
 	info->SetMinimumVersionTimestamp(fMinimumVersionTimestamp);
 	info->SetShowOnlyDesktopPackages(fShowOnlyDesktopPackages);
 	info->SetShowOnlyNativeDesktopPackages(fShowOnlyNativeDesktopPackages);
@@ -307,6 +348,28 @@ PackageFilterSpecificationBuilder::WithCategory(BString value)
 	if (!fSource.IsSet() || fSource->Category() != value) {
 		_InitFromSource();
 		fCategory = value;
+	}
+	return *this;
+}
+
+
+PackageFilterSpecificationBuilder
+PackageFilterSpecificationBuilder::WithMinimumPackageTimestamp(uint64 value)
+{
+	if (!fSource.IsSet() || fSource->MinimumPackageTimestamp() != value) {
+		_InitFromSource();
+		fMinimumPackageTimestamp = value;
+	}
+	return *this;
+}
+
+
+PackageFilterSpecificationBuilder
+PackageFilterSpecificationBuilder::WithMaximumPackageTimestampExclusive(uint64 value)
+{
+	if (!fSource.IsSet() || fSource->MaximumPackageTimestampExclusive() != value) {
+		_InitFromSource();
+		fMaximumPackageTimestampExclusive = value;
 	}
 	return *this;
 }

@@ -201,6 +201,48 @@ public:
 };
 
 
+class PackageTimestampRangeFilter : public PackageFilter {
+public:
+	PackageTimestampRangeFilter(uint64 minimumTimestamp,
+		uint64 maximumTimestampExclusive)
+		:
+		fMinimumTimestamp(minimumTimestamp),
+		fMaximumTimestampExclusive(maximumTimestampExclusive)
+	{
+	}
+
+	virtual bool AcceptsPackage(const PackageInfoRef& package) const
+	{
+		if (!package.IsSet())
+			return false;
+
+		PackageCoreInfoRef coreInfo = package->CoreInfo();
+
+		if (!coreInfo.IsSet())
+			return false;
+
+		uint64 createTimestamp = coreInfo->CreateTimestamp();
+
+		if (createTimestamp == 0)
+			return false;
+
+		if (fMinimumTimestamp != 0 && createTimestamp < fMinimumTimestamp)
+			return false;
+
+		if (fMaximumTimestampExclusive != 0
+			&& createTimestamp >= fMaximumTimestampExclusive) {
+			return false;
+		}
+
+		return true;
+	}
+
+private:
+	uint64	fMinimumTimestamp;
+	uint64	fMaximumTimestampExclusive;
+};
+
+
 class MinimumVersionTimestampFilter : public PackageFilter {
 public:
 	MinimumVersionTimestampFilter(uint64 minimumTimestamp)
@@ -370,6 +412,15 @@ PackageFilterFactory::CreateDevelopmentFilter()
 
 
 /*static*/ PackageFilterRef
+PackageFilterFactory::CreatePackageTimestampRangeFilter(uint64 minimumTimestamp,
+	uint64 maximumTimestampExclusive)
+{
+	return PackageFilterRef(
+		new PackageTimestampRangeFilter(minimumTimestamp, maximumTimestampExclusive), true);
+}
+
+
+/*static*/ PackageFilterRef
 PackageFilterFactory::CreateMinimumVersionTimestampFilter(uint64 minimumTimestamp)
 {
 	return PackageFilterRef(new MinimumVersionTimestampFilter(minimumTimestamp), true);
@@ -399,6 +450,13 @@ PackageFilterFactory::CreateFilter(const PackageFilterSpecificationRef specifica
 
 	if (!specification->Category().IsEmpty())
 		andFilter->AddFilter(CreateCategoryFilter(specification->Category()));
+
+	if (specification->MinimumPackageTimestamp() != 0
+		|| specification->MaximumPackageTimestampExclusive() != 0) {
+		andFilter->AddFilter(CreatePackageTimestampRangeFilter(
+			specification->MinimumPackageTimestamp(),
+			specification->MaximumPackageTimestampExclusive()));
+	}
 
 	if (specification->MinimumVersionTimestamp() != 0) {
 		andFilter->AddFilter(

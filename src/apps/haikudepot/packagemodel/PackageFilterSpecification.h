@@ -28,6 +28,8 @@ public:
 			BString				SearchTerms() const;
 			BString				DepotName() const;
 			BString				Category() const;
+			uint64				MinimumPackageTimestamp() const;
+			uint64				MaximumPackageTimestampExclusive() const;
 			uint64				MinimumVersionTimestamp() const;
 			bool				ShowOnlyDesktopPackages() const;
 			bool				ShowOnlyNativeDesktopPackages() const;
@@ -40,6 +42,8 @@ private:
 			void				SetSearchTerms(BString value);
 			void				SetDepotName(BString value);
 			void				SetCategory(BString value);
+			void				SetMinimumPackageTimestamp(uint64 value);
+			void				SetMaximumPackageTimestampExclusive(uint64 value);
 			void				SetMinimumVersionTimestamp(uint64 value);
 			void				SetShowOnlyDesktopPackages(bool value);
 			void				SetShowOnlyNativeDesktopPackages(bool value);
@@ -52,6 +56,8 @@ private:
 			BString				fSearchTerms;
 			BString				fDepotName;
 			BString				fCategory;
+			uint64				fMinimumPackageTimestamp;
+			uint64				fMaximumPackageTimestampExclusive;
 			uint64				fMinimumVersionTimestamp;
 			bool				fShowOnlyDesktopPackages;
 			bool				fShowOnlyNativeDesktopPackages;
@@ -83,6 +89,10 @@ public:
 			PackageFilterSpecificationBuilder
 								WithCategory(BString value);
 			PackageFilterSpecificationBuilder
+								WithMinimumPackageTimestamp(uint64 value);
+			PackageFilterSpecificationBuilder
+								WithMaximumPackageTimestampExclusive(uint64 value);
+			PackageFilterSpecificationBuilder
 								WithMinimumVersionTimestamp(uint64 value);
 			PackageFilterSpecificationBuilder
 								WithShowOnlyDesktopPackages(bool value);
@@ -107,6 +117,8 @@ private:
 			BString				fSearchTerms;
 			BString				fDepotName;
 			BString				fCategory;
+			uint64				fMinimumPackageTimestamp;
+			uint64				fMaximumPackageTimestampExclusive;
 			uint64				fMinimumVersionTimestamp;
 			bool				fShowOnlyDesktopPackages;
 			bool				fShowOnlyNativeDesktopPackages;
